@@ -1,4 +1,7 @@
 import Mathlib.Algebra.Group.Defs
+import Mathlib.Algebra.Group.Submonoid.Defs
+import Mathlib.Data.Set.Defs
+import Mathlib.Data.Set.Finite
 
 /-
 Recall that a monoid M is left-cancellative (resp. right-cancellative)
@@ -58,17 +61,20 @@ class LeftRightGCDMonoid (M : Type*) extends Monoid M, LeftDvd M, RightDvd M whe
 Definition 2.1. A Garside monoid is a pair (M, Δ), where
 M is a cancellative monoid satisfying the following conditions:
 -/
-class GarsideMonoid (M : Type*) extends CancelMonoid M where
+class GarsideMonoid (M : Type*) extends CancelMonoid M, LeftRightGCDMonoid M where
   -- (i) there exists λ : M → ℕ satisfying, for all f, g, --
   lambda : α → ℕ
   -- λ(fg) ≥ λ(f) + λ(g) --
   lambda_ord : ∀ f g : M, lambda (f * g) ≥ lambda f + lambda g
   -- g ≠ 1 ⇒ λ(g) ≠ 0 --
   lambda_nonzero : ∀ g : M, g ≠ 1 → lambda g ≠ 0
-
-  -- (ii) Any two elements of M admit left- and right- lcms and gcds --
-
-
-  -- Δ is a Garside element of M --
+  -- (ii) Any two elements of M admit left- and right- lcms and gcds - defined in LeftRightGCDMonoid --
+  -- (iii) Δ is a Garside element of M --
   Δ : M
   -- meaning that the left- and right- divisors of Δ coincide --
+  div_Δ_left_right : ∀ g : M, g ≼ₗ Δ ↔ g ≼ᵣ Δ
+  div_Δ : Set M := {g | g ≼ₗ Δ}
+  -- and generate M --
+  div_Δ_gen : ∀ (M' : Submonoid M), div_Δ ⊆ M'.carrier → M' = M
+  -- (iv) The family Div(Δ) of all divisors of Δ in M is finite --
+  div_Δ_fin : Finite div_Δ
