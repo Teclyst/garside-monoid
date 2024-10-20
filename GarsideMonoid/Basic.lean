@@ -9,12 +9,6 @@ if fg = fg' (resp. gf = g'f) implies g = g', and cancellative if
 it is both left- and right-cancellative.
 -/
 
-#check LeftCancelMonoid
-#check RightCancelMonoid
-#check CancelMonoid
-
-#check Dvd
-
 /--
 We say that f is a left-divisor of g, or, equivalently,
 that g is a right-multiple of f, written f ≼ g,
@@ -38,7 +32,7 @@ class RightDvd (α : Type*) where
   /-- Right-divisibility of `b` by `a`. Means that there is some `c` such that `b = c * a`. -/
   right_dvd: α → α → Prop
 
-@[inherit_doc] infix:50  " ≼ᵣ " => LeftDvd.left_dvd
+@[inherit_doc] infix:50  " ≼ᵣ " => RightDvd.right_dvd
 
 instance (α : Type*) [Semigroup α] : RightDvd α where
   right_dvd f g := ∃ g', g' * f = g
@@ -49,12 +43,12 @@ class LeftRightGCDMonoid (M : Type*) extends Monoid M, LeftDvd M, RightDvd M whe
   left_gcd : M → M → M
   left_gcd_dvd_left : ∀ f g, (left_gcd f g) ≼ₗ f
   left_gcd_dvd_right : ∀ f g, (left_gcd f g) ≼ₗ g
-  left_gcd_dvd : ∀ f g h, f ≼ₗ g → f ≼ₗ h → f ≼ₗ (left_gcd f g)
+  left_gcd_dvd : ∀ f g h, f ≼ₗ g → f ≼ₗ h → f ≼ₗ (left_gcd g h)
 
   right_gcd : M → M → M
   right_gcd_dvd_left : ∀ f g, (right_gcd f g) ≼ᵣ f
   right_gcd_dvd_right : ∀ f g, (right_gcd f g) ≼ᵣ g
-  right_gcd_dvd : ∀ f g h, f ≼ᵣ g → f ≼ᵣ h → f ≼ᵣ (left_gcd f g)
+  right_gcd_dvd : ∀ f g h, f ≼ᵣ g → f ≼ᵣ h → f ≼ᵣ (left_gcd g h)
   -- TODO : consolidate left/right-lcm definition --
 
 /-
