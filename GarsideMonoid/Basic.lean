@@ -1,18 +1,18 @@
 import Mathlib.Algebra.Group.Defs
-import Mathlib.Algebra.Group.Submonoid.Defs
+import Mathlib.Algebra.Group.Submonoid.Basic
 import Mathlib.Data.Set.Defs
 import Mathlib.Data.Set.Finite
 
 /-
 Recall that a monoid M is left-cancellative (resp. right-cancellative)
-if fg = fg' (resp. gf = g'f) implies g = g', and cancellative if
+if f g = f g' (resp. g f = g' f) implies g = g', and cancellative if
 it is both left- and right-cancellative.
 -/
 
 /--
 We say that f is a left-divisor of g, or, equivalently,
 that g is a right-multiple of f, written f ≼ g,
-if there exists g' in M satisfying fg' = g
+if there exists g' in M satisfying f g' = g
 -/
 class LeftDvd (α : Type*) where
   /-- Left-divisibility. `a ≼ b` (typed as `\preceq`) means that there is some `c` such that `b = a * c`. -/
@@ -25,7 +25,7 @@ instance (α : Type*) [Semigroup α] : LeftDvd α where
   left_dvd f g := ∃ g', f * g' = g
 
 /--
-For g'f = g, we symmetrically say that f is a right-divisor of g,
+For g' f = g, we symmetrically say that f is a right-divisor of g,
 or equivalently, that g is a left-multiple of f.
 -/
 class RightDvd (α : Type*) where
@@ -58,7 +58,7 @@ M is a cancellative monoid satisfying the following conditions:
 class GarsideMonoid (M : Type*) extends CancelMonoid M, LeftRightGCDMonoid M where
   -- (i) there exists λ : M → ℕ satisfying, for all f, g, --
   lambda : α → ℕ
-  -- λ(fg) ≥ λ(f) + λ(g) --
+  -- λ(f g) ≥ λ(f) + λ(g) --
   lambda_ord : ∀ f g : M, lambda (f * g) ≥ lambda f + lambda g
   -- g ≠ 1 ⇒ λ(g) ≠ 0 --
   lambda_nonzero : ∀ g : M, g ≠ 1 → lambda g ≠ 0
@@ -69,6 +69,6 @@ class GarsideMonoid (M : Type*) extends CancelMonoid M, LeftRightGCDMonoid M whe
   div_Δ_left_right : ∀ g : M, g ≼ₗ Δ ↔ g ≼ᵣ Δ
   div_Δ : Set M := {g | g ≼ₗ Δ}
   -- and generate M --
-  div_Δ_gen : ∀ (M' : Submonoid M), div_Δ ⊆ M'.carrier → M' = M
+  div_Δ_gen : Submonoid.closure div_Δ = ⊤
   -- (iv) The family Div(Δ) of all divisors of Δ in M is finite --
   div_Δ_fin : Finite div_Δ
