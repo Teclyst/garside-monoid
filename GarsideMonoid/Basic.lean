@@ -88,35 +88,85 @@ lemma bar (x : ℕ) : x ∈ my_set -> x <= 3 :=
 lemma bar' (x : ℕ) : x <= 3 -> x ∈ my_set :=
   fun x => x
 
-lemma left_dvd_rfl [Monoid M] (a : M) : a ≼ₗ a :=
-  ⟨1, mul_one _⟩
-
 lemma one_min_left_dvd [Monoid M] (a : M) : 1 ≼ₗ a :=
   ⟨a, one_mul _⟩
 
-lemma left_dvd_trans [Semigroup M] (a b c : M) : a ≼ₗ b -> b ≼ₗ c -> a ≼ₗ c := by
-  intro ⟨d, div_a_b⟩ ⟨e, div_b_c⟩
-  rw [<-div_a_b, mul_assoc] at div_b_c
-  exact ⟨d * e, div_b_c⟩
+instance (M : Type*) [Monoid M] : IsRefl M LeftDvd.left_dvd where
+  refl _ := ⟨1, mul_one _⟩
 
-lemma left_dvd_antisym [GarsideMonoid M] (a b : M) : a ≼ₗ b -> b ≼ₗ a -> a = b := by
-  intro ⟨d, div_a_b⟩ ⟨e, div_b_a⟩
-  have le_l_a_l_b : λ a ≤ λ b := calc
-    λ a ≤ λ a + λ d := by
-      simp
-    _ ≤ λ b := by
-      rw [<-div_a_b]
-      exact (GarsideMonoid.lambda_ord _ _)
-  have ge_l_a_add_l_b_l_e := (GarsideMonoid.lambda_ord b e)
-  rw[div_b_a] at ge_l_a_add_l_b_l_e
-  have le_l_e_zero : λ e ≤ 0 := by
-    exact Nat.le_of_add_le_add_left (le_trans ge_l_a_add_l_b_l_e (le_l_a_l_b))
-  have eq_l_e_zero : λ e = 0 := by
-    exact Nat.eq_zero_of_le_zero le_l_e_zero
-  have eq_e_one : e = 1 := by
-    exact (GarsideMonoid.lambda_zero_one _).mp eq_l_e_zero
-  rw [eq_e_one, mul_one, eq_comm] at div_b_a
-  exact div_b_a
+instance (M : Type*) [Semigroup M] : IsTrans M LeftDvd.left_dvd where
+  trans := by
+    intro a b c ⟨d, div_a_b⟩ ⟨e, div_b_c⟩
+    rw [<-div_a_b, mul_assoc] at div_b_c
+    exact ⟨d * e, div_b_c⟩
+
+instance (M : Type*) [GarsideMonoid M] : IsAntisymm M LeftDvd.left_dvd where
+  antisymm a b := by
+    intro ⟨d, div_a_b⟩ ⟨e, div_b_a⟩
+    have le_l_a_l_b : λ a ≤ λ b := calc
+      λ a ≤ λ a + λ d := by
+        simp
+      _ ≤ λ b := by
+        rw [<-div_a_b]
+        exact (GarsideMonoid.lambda_ord _ _)
+    have ge_l_a_add_l_b_l_e := (GarsideMonoid.lambda_ord b e)
+    rw[div_b_a] at ge_l_a_add_l_b_l_e
+    have le_l_e_zero : λ e ≤ 0 := by
+      exact Nat.le_of_add_le_add_left (le_trans ge_l_a_add_l_b_l_e (le_l_a_l_b))
+    have eq_l_e_zero : λ e = 0 := by
+      exact Nat.eq_zero_of_le_zero le_l_e_zero
+    have eq_e_one : e = 1 := by
+      exact (GarsideMonoid.lambda_zero_one _).mp eq_l_e_zero
+    rw [eq_e_one, mul_one, eq_comm] at div_b_a
+    exact div_b_a
+
+lemma lgcd_symm [GarsideMonoid M] (a b : M) : a ∧ₗ b = b ∧ₗ a := by
+  apply @antisymm _ LeftDvd.left_dvd
+  · apply GarsideMonoid.left_gcd_dvd
+    · exact GarsideMonoid.left_gcd_dvd_right _ _
+    · exact GarsideMonoid.left_gcd_dvd_left _ _
+  · apply GarsideMonoid.left_gcd_dvd
+    · exact GarsideMonoid.left_gcd_dvd_right _ _
+    · exact GarsideMonoid.left_gcd_dvd_left _ _
+
+lemma lgcd_assoc [GarsideMonoid M] (a b c : M) : (a ∧ₗ b) ∧ₗ c = a ∧ₗ (b ∧ₗ c) := by
+  apply @antisymm _ LeftDvd.left_dvd
+  · apply GarsideMonoid.left_gcd_dvd
+    · calc (a∧ₗb)∧ₗc ≼ₗ (a∧ₗb) := GarsideMonoid.left_gcd_dvd_left _ _
+          _ ≼ₗ a := GarsideMonoid.left_gcd_dvd_left _ _
+    · apply GarsideMonoid.left_gcd_dvd
+      · calc (a∧ₗb)∧ₗc ≼ₗ (a∧ₗb) := GarsideMonoid.left_gcd_dvd_left _ _
+          _ ≼ₗ b := GarsideMonoid.left_gcd_dvd_right _ _
+      · exact GarsideMonoid.left_gcd_dvd_right _ _
+  · apply GarsideMonoid.left_gcd_dvd
+    · apply GarsideMonoid.left_gcd_dvd
+      · exact GarsideMonoid.left_gcd_dvd_left _ _
+      · calc a∧ₗ(b∧ₗc) ≼ₗ (b∧ₗc) := GarsideMonoid.left_gcd_dvd_right _ _
+          _ ≼ₗ b := GarsideMonoid.left_gcd_dvd_left _ _
+    · calc a∧ₗ(b∧ₗc) ≼ₗ (b∧ₗc) := GarsideMonoid.left_gcd_dvd_right _ _
+          _ ≼ₗ c := GarsideMonoid.left_gcd_dvd_right _ _
+
+lemma mul_ldiv [GarsideMonoid M] (a b c: M) : b ≼ₗ c ↔ a * b ≼ₗ a * c := by
+  constructor
+  · intro ⟨x, eq_x⟩
+    exists x
+    rw[mul_assoc, eq_x]
+  · intro ⟨x, eq_x⟩
+    exists x
+    rw[mul_assoc] at eq_x
+    exact mul_left_cancel eq_x
+
+lemma mul_ldiv_one [GarsideMonoid M] (a b: M) : b = 1 ↔ a * b ≼ₗ a := by
+  constructor
+  · intro eq_b
+    exists 1
+    rw[eq_b, mul_one, mul_one]
+  · intro ldiv_prod_a
+    nth_rewrite 2 [<-mul_one a] at ldiv_prod_a
+    rw[<-mul_ldiv] at ldiv_prod_a
+    apply @antisymm _ LeftDvd.left_dvd
+    · exact ldiv_prod_a
+    · exact one_min_left_dvd _
 
 lemma lambda_str_incr_ldiv [GarsideMonoid M] :
     forall a b : M, a ≼ₗ b -> a ≠ b -> λ a < λ b := by
@@ -316,7 +366,7 @@ lemma delta_normal_on_length [GarsideMonoid M] :
           dsimp!
           intro eq_lgcd_one
           have eq_s_one : s = 1 := by
-            apply left_dvd_antisym
+            apply @antisymm _ LeftDvd.left_dvd
             · rw[eq_lgcd_one] at ldiv_s_lgcd
               exact ldiv_s_lgcd
             · exact (one_min_left_dvd s)
@@ -368,5 +418,175 @@ theorem delta_normal_form_exists [GarsideMonoid M] :
     DeltaNormal d ∧ π d = u ∧
     (∀ e : List M, DeltaNormal e -> π e = u -> e = d) := by
   intro u
-  apply delta_normal_on_length (λ u) u
-  eq_refl
+  exact delta_normal_on_length (λ u) u (by eq_refl)
+
+inductive LocalDeltaNormal [GarsideMonoid M] : List M -> Prop where
+  | delta_normal_nil : LocalDeltaNormal []
+  | delta_normal_simple (s : M) :
+    s ∈ div_Δ -> s ≠ 1 ->
+    LocalDeltaNormal (s :: [])
+  | delta_normal_cons (s t : M) (d : List M) :
+    s = Δ ∧ₗ (s * t) -> LocalDeltaNormal (t :: d) ->
+    LocalDeltaNormal (s :: t :: d)
+
+lemma lgcd_lprod [GarsideMonoid M] (u v w : M) :
+    (u * v) ∧ₗ (u * w) = u * (v ∧ₗ w) := by
+  have ⟨x, eq_x⟩ : u ≼ₗ (u * v)∧ₗ(u * w) := by
+    apply GarsideMonoid.left_gcd_dvd
+    · exact ⟨v, by eq_refl⟩
+    · exact ⟨w, by eq_refl⟩
+  have ldiv_x_v : x ≼ₗ v := by
+    have ⟨y, eq_y⟩ := (GarsideMonoid.left_gcd_dvd_left (u * v) (u * w))
+    rw[<- eq_x, mul_assoc] at eq_y
+    exists y
+    apply mul_left_cancel at eq_y
+    exact eq_y
+  have ldiv_x_w : x ≼ₗ w := by
+    have ⟨y, eq_y⟩ := (GarsideMonoid.left_gcd_dvd_left (u * w) (u * v))
+    rw[lgcd_symm, <- eq_x, mul_assoc] at eq_y
+    exists y
+    apply mul_left_cancel at eq_y
+    exact eq_y
+  have ldiv_x_lgcd := GarsideMonoid.left_gcd_dvd x v w ldiv_x_v ldiv_x_w
+  rw[<-eq_x]
+  have eq_x_lgcd : x = v ∧ₗ w := by
+    apply @antisymm _ LeftDvd.left_dvd
+    · exact ldiv_x_lgcd
+    · have ldiv_u_v : u * v∧ₗw ≼ₗ u * v := by
+        have ⟨y, eq_y⟩ := GarsideMonoid.left_gcd_dvd_left v w
+        nth_rewrite 2 [<-eq_y]
+        rw[<- mul_assoc]
+        exists y
+      have ldiv_u_w : u * v∧ₗw ≼ₗ u * w := by
+        have ⟨y, eq_y⟩ := GarsideMonoid.left_gcd_dvd_left w v
+        nth_rewrite 2 [<-eq_y]
+        rw[<- mul_assoc]
+        exists y
+        rw[lgcd_symm]
+      have u_v_w : u * v∧ₗw ≼ₗ (u * v)∧ₗ(u * w) := by
+        apply GarsideMonoid.left_gcd_dvd
+        · exact ldiv_u_v
+        · exact ldiv_u_w
+      rw[<-eq_x] at u_v_w
+      have ⟨y, eq_y⟩ := u_v_w
+      exists y
+      rw[mul_assoc] at eq_y
+      exact mul_left_cancel eq_y
+  rw[eq_x_lgcd]
+
+lemma alt_left [GarsideMonoid M] (u v w : M) :
+    u * v = Δ -> (Δ ∧ₗ (u * w) = u ↔ v ∧ₗ w = 1) := by
+  intro eq_prod_u_v_delta
+  constructor
+  · intro eq_lgcd_u
+    rw[<-eq_prod_u_v_delta, lgcd_lprod] at eq_lgcd_u
+    nth_rewrite 2 [<- mul_one u] at eq_lgcd_u
+    exact mul_left_cancel eq_lgcd_u
+  · intro eq_lgcd_1
+    rw[<-eq_prod_u_v_delta, lgcd_lprod, eq_lgcd_1, mul_one]
+
+theorem delta_normal_form_is_local [GarsideMonoid M] :
+  ∀ d : List M, DeltaNormal d ↔ LocalDeltaNormal d := by
+  intro d
+  constructor
+  · intro delnorm_d
+    induction delnorm_d with
+    | delta_normal_nil =>
+      exact LocalDeltaNormal.delta_normal_nil
+    | delta_normal_cons s d eq_s_lgcd ne_s_1 delnorm_d loc_delnorm_d =>
+      rcases delnorm_d with _ | ⟨t, e, eq_t_lgcd, ne_t_1, delnorm_e⟩
+      · apply LocalDeltaNormal.delta_normal_simple
+        · rw[eq_s_lgcd, GarsideMonoid.div_Δ_def_as_eq]
+          dsimp
+          exact GarsideMonoid.left_gcd_dvd_left _ _
+        · exact ne_s_1
+      · apply LocalDeltaNormal.delta_normal_cons
+        · rw[(by eq_refl : π (s :: t :: e) = π_fun (s :: t :: e))] at eq_s_lgcd
+          dsimp! at eq_s_lgcd
+          rw[<- mul_assoc] at eq_s_lgcd
+          apply @antisymm _ LeftDvd.left_dvd
+          · apply GarsideMonoid.left_gcd_dvd
+            · rw[eq_s_lgcd]
+              exact GarsideMonoid.left_gcd_dvd_left _ _
+            · exact ⟨t, by eq_refl⟩
+          · nth_rewrite 2 [eq_s_lgcd]
+            apply GarsideMonoid.left_gcd_dvd
+            · exact GarsideMonoid.left_gcd_dvd_left _ _
+            · calc
+              Δ∧ₗ(s * t) ≼ₗ s * t := by
+                exact GarsideMonoid.left_gcd_dvd_right _ _
+              _ ≼ₗ s * t * π_fun e :=
+                ⟨π_fun e, by eq_refl⟩
+        · exact loc_delnorm_d
+  · intro locdelnorm_d
+    induction locdelnorm_d with
+    | delta_normal_nil =>
+      exact DeltaNormal.delta_normal_nil
+    | delta_normal_simple s le_s_delta ne_s_1 =>
+      apply DeltaNormal.delta_normal_cons
+      · rw[(by eq_refl : π (s :: []) = π_fun (s :: []))]
+        dsimp!
+        rw[mul_one]
+        apply @antisymm _ LeftDvd.left_dvd
+        · apply GarsideMonoid.left_gcd_dvd
+          · rw[GarsideMonoid.div_Δ_def_as_eq] at le_s_delta
+            exact le_s_delta
+          · exact refl _
+        · exact GarsideMonoid.left_gcd_dvd_right _ _
+      · exact ne_s_1
+      · exact DeltaNormal.delta_normal_nil
+    | delta_normal_cons s t e eq_s_lgcd locdelnorm_cons_t_e delnorm_cons_t_e =>
+      apply DeltaNormal.delta_normal_cons
+      · rw[(by eq_refl : π (s :: t :: e) = π_fun (s :: t :: e))]
+        dsimp!
+        have ⟨y, eq_y⟩ := GarsideMonoid.left_gcd_dvd_left Δ (s * t)
+        rw[<- eq_s_lgcd] at eq_y
+        rw[eq_comm, alt_left s y _ eq_y]
+        apply @antisymm _ LeftDvd.left_dvd
+        · have ldiv_y_delta : y ≼ₗ Δ :=
+            by
+              rw[GarsideMonoid.div_Δ_left_right]
+              exists s
+          rcases delnorm_cons_t_e with _ | ⟨_, _, eq_t, ne_t_1, delnorm_e⟩
+          rw[(by eq_refl : π (t :: e) = π_fun (t :: e))] at eq_t
+          dsimp! at eq_t
+          have foo : y∧ₗ(t * π_fun e) ≼ₗ t := by
+            nth_rewrite 2 [eq_t]
+            apply GarsideMonoid.left_gcd_dvd
+            · calc
+                y∧ₗ(t * π_fun e) ≼ₗ y := GarsideMonoid.left_gcd_dvd_left _ _
+                _ ≼ₗ Δ := ldiv_y_delta
+            · exact GarsideMonoid.left_gcd_dvd_right _ _
+          have bar : y∧ₗ(t * π_fun e) = t∧ₗ (y∧ₗ(t * π_fun e)) := by
+            apply @antisymm _ LeftDvd.left_dvd
+            · apply GarsideMonoid.left_gcd_dvd
+              · exact foo
+              · exact refl _
+            · apply GarsideMonoid.left_gcd_dvd
+              · calc
+                t∧ₗ(y∧ₗ(t * π_fun e)) ≼ₗ y∧ₗ(t * π_fun e) :=
+                  GarsideMonoid.left_gcd_dvd_right _ _
+                _ ≼ₗ y :=
+                  GarsideMonoid.left_gcd_dvd_left _ _
+              · calc
+                t∧ₗ(y∧ₗ(t * π_fun e)) ≼ₗ y∧ₗ(t * π_fun e) :=
+                  GarsideMonoid.left_gcd_dvd_right _ _
+                _ ≼ₗ t * π_fun e :=
+                  GarsideMonoid.left_gcd_dvd_right _ _
+          rw[eq_comm, alt_left _ _ _ eq_y, lgcd_symm] at eq_s_lgcd
+          rw[bar, <-lgcd_assoc, eq_s_lgcd]
+          exact GarsideMonoid.left_gcd_dvd_left _ _
+        · exact one_min_left_dvd _
+      · intro eq_s_1
+        rcases delnorm_cons_t_e with _ | ⟨_, _, eq_t, ne_t_1, _⟩
+        rw[eq_s_1, one_mul, eq_comm] at eq_s_lgcd
+        have eq_lgcd_t : Δ∧ₗt = t := by
+          apply @antisymm _ LeftDvd.left_dvd
+          · exact GarsideMonoid.left_gcd_dvd_right _ _
+          · apply GarsideMonoid.left_gcd_dvd
+            · rw[eq_t]
+              exact GarsideMonoid.left_gcd_dvd_left _ _
+            · exact refl _
+        rw[eq_lgcd_t] at eq_s_lgcd
+        exact ne_t_1 eq_s_lgcd
+      · exact delnorm_cons_t_e
